@@ -13,25 +13,30 @@ Incluye:
 """
 
 import string
-import os
 import sys
+import logging
+from pathlib import Path
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    encoding="utf-8",
+)
 
 # --- Constantes ---
-BASE_DIR = os.path.dirname(__file__)
-DATA_DIR = os.path.join(BASE_DIR, "..", "data")
-
-FILE_ORIGINAL = os.path.join(DATA_DIR, "mensaje.txt")
-FILE_CIFRADO = os.path.join(DATA_DIR, "mensaje_cifrado.txt")
-FILE_DESCIFRADO = os.path.join(DATA_DIR, "mensaje_descifrado.txt")
+BASE_DIR = Path(__file__).parent
+DATA_DIR = BASE_DIR.parent / "data"
+RESULTS_DIR = DATA_DIR / "1_Resultados"
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 def limpiar_texto(texto: str) -> str:
     """
     Convierte el texto a mayúsculas y elimina caracteres no alfabéticos.
 
-    Args:
+    Parámetros:
         texto (str): Texto a limpiar.
 
-    Returns:
+    Retorna:
         str: Texto limpio solo con letras mayúsculas.
     """
     return ''.join(c for c in texto.upper() if c in string.ascii_uppercase)
@@ -42,52 +47,58 @@ def leer_fichero(path: str) -> str:
 
     Intenta primero en UTF-8, si falla prueba con latin-1.
 
-    Args:
+    Parámetros:
         path (str): Ruta del fichero.
 
-    Returns:
+    Retorna:
         str: Contenido del fichero (sin saltos finales), o cadena vacía si error.
+    
+    Excepción:
+        OSError: Si ocurre un error al leer el fichero.
     """
     try:
-        with open(path, 'r', encoding='utf-8') as f:
-            return f.read().strip()
-    except UnicodeDecodeError:
-        try:
-            with open(path, 'r', encoding='latin-1') as f:
-                return f.read().strip()
-        except (UnicodeDecodeError, OSError) as e:
-            print(f"Error leyendo {path}: {e}")
-            return ""
+        logging.info("Leyendo fichero %s", path)
+        return path.read_text(encoding="utf-8").strip()
+    except FileNotFoundError as e:
+        logging.error("Archivo no encontrado %s: %s", path, e)
+    except PermissionError as e:
+        logging.error("Permiso denegado en %s: %s", path, e)
     except OSError as e:
-        print(f"Error leyendo {path}: {e}")
-        return ""
+        logging.error("Error en el sistema de ficheros para %s: %s", path, e)
 
 def escribir_fichero(path: str, contenido: str) -> None:
     """
     Escribe contenido en un fichero de texto con codificación UTF-8.
 
-    Args:
+    Parámetros:
         path (str): Ruta del fichero.
         contenido (str): Texto a escribir.
+    
+    Excepción:
+        OSError: Si ocurre un error al escribir el fichero.
     """
     try:
-        with open(path, 'w', encoding='utf-8') as f:
-            f.write(contenido)
+        logging.info("Escribiendo en fichero %s", path)
+        path.write_text(contenido, encoding='utf-8')
+    except FileNotFoundError as e:
+        logging.error("Archivo no encontrado %s: %s", path, e)
+    except PermissionError as e:
+        logging.error("Permiso denegado en %s: %s", path, e)
     except OSError as e:
-        print(f"Error escribiendo {path}: {e}")
+        logging.error("Error en el sistema de ficheros para %s: %s", path, e)
 
 def ajustar_clave(texto: str, clave: str) -> str:
     """
     Ajusta la clave para que coincida en longitud con el texto.
 
-    Args:
+    Parámetros:
         texto (str): Texto cuya longitud usar.
         clave (str): Clave original.
 
-    Returns:
+    Retorna:
         str: Clave repetida o cortada para igualar longitud.
 
-    Raises:
+    Excepción:
         ValueError: Si la clave está vacía después de limpieza.
     """
     clave_limpia = limpiar_texto(clave)
@@ -100,14 +111,14 @@ def cifrar_vigenere(texto: str, clave: str) -> str:
     """
     Cifra el texto con el algoritmo de Vigenère.
 
-    Args:
+    Parámetros:
         texto (str): Texto original.
         clave (str): Clave para cifrado.
 
-    Returns:
+    Retorna:
         str: Texto cifrado.
 
-    Raises:
+    Excepción:
         ValueError: Si la clave está vacía.
     """
     texto_limpio = limpiar_texto(texto)
@@ -120,21 +131,19 @@ def cifrar_vigenere(texto: str, clave: str) -> str:
         # Sumar y modular para evitar salir del rango
         c_pos = (t_pos + k_pos) % 26
         resultado.append(chr(c_pos + ord('A')))
+    logging.info("Texto cifrado correctamente.")
     return ''.join(resultado)
 
 def descifrar_vigenere(texto_cifrado: str, clave: str) -> str:
     """
     Descifra un texto cifrado con Vigenère.
 
-    Args:
+    Parámetros:
         texto_cifrado (str): Texto cifrado.
         clave (str): Clave usada para cifrado.
 
-    Returns:
+    Retorna:
         str: Texto original descifrado.
-
-    Raises:
-        ValueError: Si la clave está vacía.
     """
     texto_limpio = limpiar_texto(texto_cifrado)
     clave_ajustada = ajustar_clave(texto_limpio, clave)
@@ -145,6 +154,7 @@ def descifrar_vigenere(texto_cifrado: str, clave: str) -> str:
         # Restar, y ajustar si negativa sumando 26
         t_pos = (c_pos - k_pos + 26) % 26
         resultado.append(chr(t_pos + ord('A')))
+    logging.info("Texto descifrado correctamente.")
     return ''.join(resultado)
 
 def main():
@@ -152,7 +162,7 @@ def main():
     Punto de entrada del programa. Ofrece menú para cifrar/descifrar por consola o ficheros.
     Controla errores específicos y muestra resultados.
     
-    Raises:
+    Excepción:
         ValueError: Si la clave está vacía.
     """
     print("=== Cifrado y Descifrado Vigenère ===")
@@ -178,24 +188,34 @@ def main():
             print(f"Mensaje descifrado: {texto_descifrado}")
 
         elif opcion == '3':
-            mensaje = leer_fichero(FILE_ORIGINAL)
-            if not mensaje:
-                print(f"No se pudo leer el fichero {FILE_ORIGINAL}")
+            nombre_fichero = input("Introduce el nombre del fichero a cifrar: ")
+            path_original = DATA_DIR / nombre_fichero
+            if not path_original.is_file():
+                print(f"Error: no se encontró el fichero '{nombre_fichero}'")
                 return
+
             clave = input("Introduce la clave: ")
+            mensaje = leer_fichero(path_original)
             texto_cifrado = cifrar_vigenere(mensaje, clave)
-            escribir_fichero(FILE_CIFRADO, texto_cifrado)
-            print(f"Mensaje cifrado guardado en {FILE_CIFRADO}")
+            nombre_sin_ext = path_original.stem
+            path_salida = RESULTS_DIR / f"{nombre_sin_ext}_cifrado.txt"
+            escribir_fichero(path_salida, texto_cifrado)
+            print(f"Mensaje cifrado guardado en {path_salida}")
 
         elif opcion == '4':
-            mensaje_cifrado = leer_fichero(FILE_CIFRADO)
-            if not mensaje_cifrado:
-                print(f"No se pudo leer el fichero {FILE_CIFRADO}")
+            nombre_fichero = input("Introduce el nombre del fichero a descifrar: ")
+            path_cifrado = DATA_DIR / nombre_fichero
+            if not path_cifrado.is_file():
+                print(f"Error: no se encontró el fichero '{nombre_fichero}'")
                 return
+
             clave = input("Introduce la clave: ")
+            mensaje_cifrado = leer_fichero(path_cifrado)
             texto_descifrado = descifrar_vigenere(mensaje_cifrado, clave)
-            escribir_fichero(FILE_DESCIFRADO, texto_descifrado)
-            print(f"Mensaje descifrado guardado en {FILE_DESCIFRADO}")
+            nombre_sin_ext = path_cifrado.stem
+            path_salida = RESULTS_DIR / f"{nombre_sin_ext}_descifrado.txt"
+            escribir_fichero(path_salida, texto_descifrado)
+            print(f"Mensaje descifrado guardado en {path_salida}")
 
         else:
             print("Opción no válida. Elige un número entre 1 y 4.")
@@ -204,7 +224,8 @@ def main():
         print("\nEjecución interrumpida por el usuario.")
         sys.exit(0)
 
-    except (FileNotFoundError, ValueError, OSError) as e:
+    except (ValueError, OSError) as e:
         print(f"Error: {e}")
+
 if __name__ == "__main__":
     main()
