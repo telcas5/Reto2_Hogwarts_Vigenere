@@ -12,8 +12,6 @@ Este módulo implementa el algoritmo de cifrado y descifrado Vigenère, con ejem
 
 - Lectura y escritura de ficheros de forma controlada con gestión de errores.
 
-- Cifrado y descifrado de ficheros grandes procesándolos por bloques, manteniendo la posición de la clave entre bloques para eficiencia y uso controlado de memoria.
-
 - Registro (logging) de eventos y errores, con posibilidad de guardar logs en fichero.
 
 - Interfaz de línea de comandos con un menú para seleccionar opciones.
@@ -44,17 +42,15 @@ El programa mostrará un menú con opciones para:
 
     4. Descifrar fichero de texto.
 
-Al elegir opciones de fichero, se procesará el archivo por bloques para optimizar memoria.
-
 ## Estructura de funciones principales
 
-cifrar_vigenere(texto, clave) — cifra texto completo.
+- cifrar_vigenere: cifra texto completo.
 
-descifrar_vigenere(texto_cifrado, clave) — descifra texto completo.
+- descifrar_vigenere: descifra texto completo.
 
-leer_fichero(path) y escribir_fichero(path, contenido) — auxiliares para gestión de ficheros con logging.
+- leer_fichero y escribir_fichero: Funciones auxiliares para la gestión de ficheros con logging.
 
-ajustar_clave(texto, clave) — ajusta la clave a la longitud necesaria.
+- ajustar_clave: ajusta la clave a la longitud necesaria.
 
 ## Autores
 
