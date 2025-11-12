@@ -17,8 +17,6 @@ Autores: Telmo Castillo y Erlantz García
 Fecha: 10 de Noviembre de 2025
 """
 
-# TODO: Hacer que lea por grupos de BYTES
-# TODO: El segundo punto de puntos extra
 
 import sys
 import logging
