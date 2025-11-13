@@ -32,8 +32,8 @@ logging.basicConfig(
 
 
 # Constantes
-BASE_DIR = Path(__file__).parent
-DATA_DIR = BASE_DIR.parent / "data"
+BASE_DIR = Path.cwd()
+DATA_DIR = BASE_DIR.parent / "mensajes"
 RESULTS_DIR = DATA_DIR / "1_Resultados"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -211,11 +211,13 @@ def main():
                 clave = input("Introduce la clave: ")
                 texto_cifrado = cifrar_vigenere(mensaje, clave)
                 print(f"Mensaje cifrado: {texto_cifrado}")
+                
             case '2':
                 mensaje = input("Introduce el mensaje cifrado: ")
                 clave = input("Introduce la clave: ")
                 texto_descifrado = descifrar_vigenere(mensaje, clave)
                 print(f"Mensaje descifrado: {texto_descifrado}")
+                
             case '3':
                 nombre_fichero = input("Introduce el nombre del fichero a cifrar: ")
                 path_original = DATA_DIR / nombre_fichero
@@ -229,6 +231,7 @@ def main():
                 path_salida = RESULTS_DIR / f"{nombre_sin_ext}_cifrado.txt"
                 escribir_fichero(path_salida, texto_cifrado)
                 print(f"Mensaje cifrado guardado en {path_salida}")
+                
             case '4':
                 nombre_fichero = input("Introduce el nombre del fichero a descifrar: ")
                 path_cifrado = DATA_DIR / nombre_fichero
@@ -242,6 +245,7 @@ def main():
                 path_salida = RESULTS_DIR / f"{nombre_sin_ext}_descifrado.txt"
                 escribir_fichero(path_salida, texto_descifrado)
                 print(f"Mensaje descifrado guardado en {path_salida}")
+                
             case _:
                 print("Opción no válida. Elige un número entre 1 y 4.")
 
@@ -253,6 +257,9 @@ def main():
     except (ValueError, OSError) as e:
         logging.error("Error: %s", e)
         print(f"Error: {e}")
+    
+    finally:
+        input("\nPresione ENTER para cerrar...")
 
 if __name__ == "__main__":
     main()
